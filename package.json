@@ -10,7 +10,8 @@
     "seed": "tsx scripts/seed.ts",
     "update:data": "tsx scripts/update-data.ts",
     "update:real": "node scripts/update-real-data.mjs",
-    "update:static": "node scripts/update-real-data.mjs"
+    "update:static": "node scripts/update-real-data.mjs",
+    "analyze:panel": "node scripts/build-research-panel.mjs"
   },
   "dependencies": {
     "@types/better-sqlite3": "^7.6.13",

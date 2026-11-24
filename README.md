@@ -61,6 +61,17 @@ SMITHERY_API_KEY=...
 
 说明：2026-11-24 之前的快照没有 `collection` / `collectorStats` 字段；2026-11-23 已恢复为原始定时快照，2026-11-24 在策略生效前的记录来自手动运行。分析时请把缺失元数据视为 unknown，并用 `generatedAt` 计算实际采样间隔。
 
+### 研究面板
+
+运行 `npm run analyze:panel` 会基于 `data/snapshots/` 生成 `analysis/` 下的研究面板：
+
+- `analysis/snapshots.csv`：快照级面板（时间、来源、触发方式、平台分布、间隔、总量指标）
+- `analysis/skills.csv`：skill 级面板（排名、名称、URL、原始指标）
+- `analysis/platform-coverage.csv`：平台覆盖长表
+- `analysis/continuity-report.md`：连续性、间隔异常和覆盖变化报告
+
+字段说明和研究注意事项见 `analysis/README.md`。该分析不会随每日 workflow 自动更新，需要在 `git pull` 后手动重跑。
+
 ## Trending Score
 
 `lib/scoring.ts` 将 downloads、installs、stars、views、更新时间、新 Skill 加权为统一分数：
