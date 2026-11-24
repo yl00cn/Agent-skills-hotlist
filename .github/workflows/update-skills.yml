@@ -10,6 +10,10 @@ permissions:
   pages: write
   id-token: write
 
+concurrency:
+  group: update-skills
+  cancel-in-progress: false
+
 jobs:
   update:
     runs-on: ubuntu-latest
@@ -21,13 +25,13 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
+      - name: Pull latest changes
+        run: git pull --rebase --autostash origin main
       - run: node scripts/update-real-data.mjs
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SKILLS_SH_TOKEN: ${{ secrets.SKILLS_SH_TOKEN }}
           SMITHERY_API_KEY: ${{ secrets.SMITHERY_API_KEY }}
-      - name: Pull latest changes
-        run: git pull --rebase --autostash origin main
       - name: Commit refreshed hotlist
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
