@@ -32,11 +32,18 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SKILLS_SH_TOKEN: ${{ secrets.SKILLS_SH_TOKEN }}
           SMITHERY_API_KEY: ${{ secrets.SMITHERY_API_KEY }}
+          RUN_TRIGGER: ${{ github.event_name }}
+          RUN_ID: ${{ github.run_id }}
+          RUN_NUMBER: ${{ github.run_number }}
+          RUN_ATTEMPT: ${{ github.run_attempt }}
+          RUN_ACTOR: ${{ github.actor }}
+          RUN_SHA: ${{ github.sha }}
+          RUN_REF: ${{ github.ref }}
       - name: Commit refreshed hotlist
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: "chore: update daily skill hotlist"
-          file_pattern: data/skills-latest.json data/snapshots/*.json public/index.html
+          file_pattern: data/skills-latest.json data/snapshots/*.json data/snapshots/manual/*.json public/index.html
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
       - name: Upload public site

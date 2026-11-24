@@ -1,3 +1,4 @@
+import { execSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 
@@ -15,6 +16,24 @@ const platforms = {
 };
 
 const now = () => new Date().toISOString();
+const gitValue = (args) => {
+  try {
+    return execSync(`git ${args}`, { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim();
+  } catch {
+    return null;
+  }
+};
+const runMeta = {
+  trigger: process.env.RUN_TRIGGER || "unknown",
+  runId: process.env.RUN_ID || null,
+  runNumber: process.env.RUN_NUMBER ? Number(process.env.RUN_NUMBER) : null,
+  runAttempt: process.env.RUN_ATTEMPT ? Number(process.env.RUN_ATTEMPT) : null,
+  actor: process.env.RUN_ACTOR || null,
+  eventSha: process.env.RUN_SHA || null,
+  ref: process.env.RUN_REF || null,
+  headSha: gitValue("rev-parse HEAD"),
+  headRef: gitValue("rev-parse --abbrev-ref HEAD")
+};
 const compactNumber = (value) => {
   if (typeof value === "number") return value;
   if (!value) return 0;
@@ -383,13 +402,16 @@ const collectors = [
 ];
 
 const all = [];
+const collectorStats = [];
 for (const [name, collect] of collectors) {
   try {
     const rows = await collect();
     console.log(`[${name}] ${rows.length} rows`);
+    collectorStats.push({ platform: name, rows: rows.length, error: null });
     all.push(...rows);
   } catch (error) {
     console.warn(`[${name}] ${error.message}`);
+    collectorStats.push({ platform: name, rows: 0, error: error.message });
   }
 }
 
@@ -402,12 +424,27 @@ const deduped = [...new Map(all.map((item) => [item.sourceUrl, item])).values()]
 if (!deduped.length) throw new Error("No rankable rows collected. Configure SKILLS_SH_TOKEN, SMITHERY_API_KEY, or GITHUB_TOKEN.");
 
 const generatedAt = now();
-const snapshot = { generatedAt, count: deduped.length, unrankedCount: unranked.length, rankingRule: "Only rows with downloads, installs, or stars greater than 0 are ranked.", skills: deduped };
+const snapshot = {
+  schemaVersion: 1,
+  generatedAt,
+  collection: runMeta,
+  collectorStats,
+  count: deduped.length,
+  unrankedCount: unranked.length,
+  rankingRule: "Only rows with downloads, installs, or stars greater than 0 are ranked.",
+  skills: deduped
+};
 fs.mkdirSync(path.join(dataDir, "snapshots"), { recursive: true });
 fs.mkdirSync(publicDir, { recursive: true });
 fs.mkdirSync(outputDir, { recursive: true });
 fs.writeFileSync(path.join(dataDir, "skills-latest.json"), JSON.stringify(snapshot, null, 2));
-fs.writeFileSync(path.join(dataDir, "snapshots", `${generatedAt.slice(0, 10)}.json`), JSON.stringify(snapshot, null, 2));
+const snapshotPath =
+  runMeta.trigger === "schedule"
+    ? path.join(dataDir, "snapshots", `${generatedAt.slice(0, 10)}.json`)
+    : path.join(dataDir, "snapshots", "manual", `${generatedAt.replace(/[-:]/g, "").replace(/\.\d{3}Z$/, "Z")}.json`);
+fs.mkdirSync(path.dirname(snapshotPath), { recursive: true });
+fs.writeFileSync(snapshotPath, JSON.stringify(snapshot, null, 2));
 fs.writeFileSync(path.join(publicDir, "index.html"), htmlWithEvidence(deduped, unranked.length));
 fs.writeFileSync(path.join(outputDir, "ai-agent-skills-hotlist-preview.html"), htmlWithEvidence(deduped, unranked.length));
 console.log(`Wrote ${deduped.length} rankable real skills. Excluded ${unranked.length} rows with no ranking metric.`);
+console.log(`Snapshot: ${path.relative(root, snapshotPath)}`);

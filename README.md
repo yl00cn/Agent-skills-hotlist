@@ -44,6 +44,23 @@ SMITHERY_API_KEY=...
 
 如果缺少某个平台的 key，更新任务不会造假；它会跳过该平台或使用公开页面爬虫，并在日志里说明。
 
+## 数据快照与口径
+
+- `data/snapshots/YYYY-MM-DD.json`：canonical 日度快照，只由**定时运行**（`schedule`）写入。
+- `data/snapshots/manual/YYYY-MM-DDTHHMMSSZ.json`：手动运行（`workflow_dispatch`）的快照，不进入 canonical 序列。
+- `data/skills-latest.json`：每次运行都会更新的最新状态，不是历史序列。
+- `public/index.html`：由最新数据生成，每次运行都会更新。
+
+快照字段：
+
+- `schemaVersion`：快照结构版本（当前为 1）。
+- `generatedAt`：实际采集时间（UTC ISO 时间戳），分析时应以它作为采样时间。
+- `collection`：运行来源信息（`trigger`、`runId`、`runNumber`、`runAttempt`、`actor`、`eventSha`、`ref`、`headSha`、`headRef`）。
+- `collectorStats`：每个平台的采集行数和错误信息，用于判断覆盖率是否完整。
+- `count` / `unrankedCount` / `rankingRule` / `skills`：与之前相同，采集、去重、过滤和评分口径未改变。
+
+说明：2026-11-24 之前的快照没有 `collection` / `collectorStats` 字段；2026-11-23 已恢复为原始定时快照，2026-11-24 在策略生效前的记录来自手动运行。分析时请把缺失元数据视为 unknown，并用 `generatedAt` 计算实际采样间隔。
+
 ## Trending Score
 
 `lib/scoring.ts` 将 downloads、installs、stars、views、更新时间、新 Skill 加权为统一分数：
