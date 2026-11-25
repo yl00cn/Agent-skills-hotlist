@@ -27,6 +27,12 @@ node scripts/build-research-panel.mjs --data-dir data --out-dir analysis --data-
 | `skills.csv` | 每快照 × 每 skill 一行 | skill 级面板：排名、名称、URL、原始指标、trendingScore、分类 |
 | `continuity-report.md` | - | 连续性、间隔异常、平台覆盖变化、数量异常和手动快照报告 |
 
+## 金融目录
+
+- `skills-sh-finance-catalog.csv`：Skills.sh 金融相关 skill（skill 级，含 segment / confidence / type / installs）
+- `github-finance-catalog.csv`：GitHub 金融相关 repo（repo 级，含 repo_type / finance_focus / types / stars）
+- `finance-catalog-summary.md`：两份目录的方法、统计、代表条目、字段说明和限制
+
 ## 关键字段
 
 - `snapshot_date`：canonical 快照取文件名日期；manual 快照取 `generatedAt` 的 UTC 日期。
