@@ -7,7 +7,7 @@
 
 | 文件 | 粒度 | 行数 | 说明 |
 |---|---|---|---|
-| `skills-sh-finance-catalog.csv` | skill | **482** | Skills.sh 金融相关 skill |
+| `skills-sh-finance-catalog.csv` | skill | **488** | Skills.sh 金融相关 skill |
 | `github-finance-catalog.csv` | repo | **1,234** | GitHub 金融相关 agent skill / MCP / 工具 repo |
 | `finance-catalog-summary.md` | - | - | 本说明 |
 
@@ -19,7 +19,8 @@
 2. 按 slug 的金融词筛出 **581** 个候选；
 3. 抓取每个候选页的 JSON-LD（名称、真实描述、installs、publisher、First Seen）；
 4. 按描述做金融分类和误判清理；
-5. 保留 **482** 个：**309 high / 173 medium**。
+5. 保留 **482** 个：**309 high / 173 medium**；
+6. 对 sitemap 前 3,000 个头部 URL 做重要性审计，再加入 6 个真正高安装量的金融 skill（GMGN 系列 + backtesting-frameworks），最终 **488** 个：**314 high / 174 medium**。
 
 ### GitHub
 
@@ -29,27 +30,47 @@
 4. 保留 **1,234** 个：**1,044 high / 190 medium**；
 5. repo 类型：831 skill-repo、342 mcp-server、57 collection/awesome-list、4 tool/library/api。
 
+## 重要性覆盖与 priority_tier
+
+为了“不遗漏重要 skill”，对 Skills.sh sitemap 前 **3,000** 个 URL（installs 约 ≥10k 的头部）做了额外审计：
+
+- 抓取 **2,961** 个未在 slug 目录中的头部页面；
+- 按描述筛出 **169** 个金融关键词命中，但绝大多数是“描述里顺带提到 finance/cost/options/量化”的通用 skill（OKR、表格、云成本、设计、营销等）；
+- 只保留 **6** 个真正高安装量的金融 skill：`gmgn-market/token/track/swap/cooking`（加密行情/交易）和 `backtesting-frameworks`（交易回测）。
+
+`priority_tier` 规则：
+
+- **Skills.sh**：A ≥50,000 installs；B ≥10,000；C ≥1,000；D <1,000。
+- **GitHub**：A ≥5,000 stars；B ≥1,000；C ≥100；D <100。
+
+当前分布：
+
+- Skills.sh：**A 3 / B 36 / C 268 / D 181**
+- GitHub：**A 1 / B 8 / C 38 / D 1,187**
+
+重要性优先阅读：Skills.sh `priority_tier in (A,B)`（39 个）；GitHub `priority_tier in (A,B,C)`（47 个 repo），再人工复核。
+
 ## 类型分布
 
-### Skills.sh（482 个 skill）
+### Skills.sh（488 个 skill）
 
 | 类型 | 数量 |
 |---|---|
-| Trading/Quant | 161 |
+| Trading/Quant | 166 |
 | Equity/Stock Research | 145 |
-| Fintech/Infra | 125 |
-| Crypto/DeFi/Wallet | 106 |
+| Fintech/Infra | 126 |
+| Crypto/DeFi/Wallet | 111 |
 | Financial Data/News | 72 |
-| Portfolio/Wealth | 67 |
+| Portfolio/Wealth | 68 |
 | Accounting/Tax | 61 |
 | Payments/Banking/Credit | 59 |
-| Macro/Fixed Income | 48 |
+| Macro/Fixed Income | 49 |
 | Payments/Fintech Infra | 33 |
 | Other Finance | 21 |
 | Insurance/Real Estate | 7 |
 | Personal Finance / FP&A | 2 |
 
-规模：**400 个 analysis/data、61 个 payments/fintech-infra、21 个 other**。
+规模：**406 个 analysis/data、61 个 payments/fintech-infra、21 个 other**。
 
 ### GitHub（1,234 个 repo）
 
@@ -110,6 +131,8 @@
 - `installs`：Skills.sh 当前累计 installs
 - `publisher`、`first_seen`、`url`
 - `description`：Skills.sh 技能页的真实描述
+- `source`：`slug-catalog`（slug 候选 + 描述确认）或 `importance-audit`（头部高安装量补充）
+- `priority_tier`：A/B/C/D，按 installs 分层
 
 ### `github-finance-catalog.csv`
 
@@ -119,11 +142,12 @@
 - `stars`、`forks`、`topics`、`language`、`license`、`updated_at`
 - `matched_queries`：哪些 GitHub 搜索查询命中了该 repo
 - `description`：GitHub repo 描述
+- `priority_tier`：A/B/C/D，按 stars 分层
 
 ## 使用建议
 
-1. **Skills.sh 研究用**：优先 `segment == "analysis/data"` 且 `confidence == "high"`；支付/账单基础设施单独用 `segment == "payments/fintech-infra"`。
-2. **GitHub 研究用**：优先 `finance_focus == "high"` 且 `repo_type == "skill-repo"` 或 `mcp-server`；`collection/awesome-list` 需要进一步枚举里面的具体 skill。
+1. **Skills.sh 研究用**：优先 `segment == "analysis/data"` 且 `confidence == "high"`；先看 `priority_tier in (A,B)`；支付/账单基础设施单独用 `segment == "payments/fintech-infra"`。
+2. **GitHub 研究用**：优先 `finance_focus == "high"` 且 `repo_type == "skill-repo"` 或 `mcp-server`；先看 `priority_tier in (A,B,C)`；`collection/awesome-list` 需要进一步枚举里面的具体 skill。
 3. **去重**：同一 repo 下多个 skill（如 `anthropics/financial-services`、`joellewis/finance_skills`）要按 repo + skill 去重；跨平台按名称/仓库做实体匹配。
 4. **版本/历史**：这两个目录是**当前快照**；installs/stars 是当前值，没有历史时间序列。要做事件研究，需要从现在开始逐日快照。
 5. **人工复核**：分类是规则 + 描述判断，仍有少量误判（特别是 payments/billing、broad collection、金融相邻但非分析的条目）；建议先人工检查 top 100。
@@ -131,7 +155,9 @@
 ## 限制
 
 - Skills.sh 候选基于 **slug** 筛选，未覆盖所有 20,000 个 skill；描述确认只针对候选页，因此是**下限**，不是全量。
+- 重要性审计只覆盖 sitemap 前 3,000 个（约 installs ≥10k 的头部）；更低 installs 的长尾未审计。
 - GitHub 是 **repo 级**，不是 skill 级；一个 repo 可能包含几十到几百个 skill，也可能只是工具/awesome list。
+- GitHub 搜索按 stars 排序、每查询取前 100，属于高星 + 关键词采样，不是全量。
 - 描述来自当前页面；历史上架/下架、历史 installs、历史 stars 均不可得。
 - 没有自动解决“同一项目多平台/多 repo”的实体匹配；`skills.sh` 的 source repo 与 GitHub repo 可以按 owner/repo 尝试匹配。
 - 上市公司映射仍需单独做；目录里大部分是个人/私营/开源项目。
